@@ -162,6 +162,13 @@ class SchedulerCBOnline:
                                          "SmartAdapt_MN2_joint_Top200", "SmartAdapt_MN2_1head_Top200"],
                  tv_version=None, dataset_prefix=None):
 
+
+
+
+
+
+        # 这个prot2feat是一个字典，key是smartadapt的不同变体，value是不同的特征名
+        # 论文表示我们可以从图像中提取出不同的特征，然后这些特征的特点不同，（轻量型、重量型）
         self.prot2feat = {
             "SmartAdapt_BL": None,
             "SmartAdapt_Lite": "light",
@@ -180,19 +187,46 @@ class SchedulerCBOnline:
             "SmartAdapt_MN2_joint_Top200": None,
             "SmartAdapt_MN2_1head_Top200": None,
         }
+        
+
+
+        # 这两句代码就是将cost和benefit的文件反序列化成python对象
         self.cost_LUT = pickle.load(open(cost_filename, "rb"))
         self.benefit_LUT = pickle.load(open(benefit_filename, "rb"))
+
+
+
+
         # A protocol will be consider if it is at least better than the baseline
+        #protocol_options_avail是关于smartadapt的不同变体。具体这玩意是啥，还不清楚。
         protocol_options = []
         for protocol in protocol_options_avail:
+            # 通过反序列化输出可以看到benefit.pb文件保存的是一个字典，其中每一项的内容举例：('SmartAdapt_BL', 'tx2', 0, 33.3): 0.0
+            # 通过下面key的分析，可知，benefit_LUT中的key是一个四元组，分别是模型名，设备名，gpu级别，用户需求(延时)
+            # 这里的protocol_options_avail就是模型名列表。protocol_options会根据benefit中的内容选择其中的几个模型
             key = (protocol, mobile_device, contention_levels["gpu_level"], user_requirement)
             if (key in self.benefit_LUT) and (self.benefit_LUT[key] >= 0):
                 protocol_options.append(protocol)
+        
+
+
+
+
+
         # print("scheduler.protocol_options = {}".format(protocol_options))
         self.protocol_options = protocol_options
         self.mobile_device = mobile_device
         self.user_requirement = user_requirement
         self.latency_target = user_requirement/(1+0.3) if p95_requirement else user_requirement
+
+
+
+
+
+
+
+        # 这个config_list是一个列表，每一项是一个五元组，分别是GOF大小，图像大小，候选框的数量，跟踪器，降采样相关参数
+        # 然后这个config_list的每个元素是一个自由组合的状态。一共有1036种可能的状态，也就是有1036个元素
         self.config_list = get_config_list(FRCNN_only=True)
         self.default_config = (100, 224, 1, 'medianflow', 4)  # (si, shape, nprop, tracker, ds)
         self.default_config_idx = self.config_list.index(self.default_config)
@@ -240,6 +274,9 @@ class SchedulerCBOnline:
             else:
                 print("ERROR: protocol not supported in init()")
                 return
+
+
+
 
         # Initialize the HoC/HoG feature extractor
         self.feature_extractor = None

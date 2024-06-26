@@ -1,6 +1,6 @@
-from tqdm import tqdm
+import pickle
+import numpy
+with open('models/SmartAdapt_cost_20211009.pb','rb') as file:
+    data = pickle.load(file)
 
-import time
-
-for i in tqdm(range(1000000000),colour='green',desc='正在安装'):
-    a = 1 + 1 + 109 * 81
+print(data)

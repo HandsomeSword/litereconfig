@@ -26,6 +26,10 @@ def get_config_list(FRCNN_only=True):
     if not FRCNN_only:
         list_yshapes = list(range(224, 577, 32))
         ker_sh_np += [(s, -1) for s in list_yshapes]
+
+    # 这里考虑了两种情况，存在GOF的情况和不存在GOF的情况（使用tracker和不使用tracker）
+    # si就是GOF的大小，shape就是图像的大小，nprop就是anchor的数量，tracker就是追踪器的类型，ds就是追踪器的downsample（设置的降采样级别）
+
     config_list = [(1, s, n, '', -1) for s, n in ker_sh_np]
     config_list += [(si, s, n, tracker, ds) for si in list_sis[1:] \
                     for s, n in ker_sh_np for tracker, ds in list_trackers]
