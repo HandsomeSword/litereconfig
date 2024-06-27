@@ -573,7 +573,8 @@ class LatencyPredictor:
 class FeatureExtractorOnline:
 
     def __init__(self, feature_name):
-
+        
+        # 根据feature_name选择不同的特征提取器
         self.feature_name = feature_name
         if feature_name == 'HoG':
             self.extractor = self.hog_extractor
@@ -581,7 +582,7 @@ class FeatureExtractorOnline:
             self.extractor = self.hoc_extractor
 
     def hog_extractor(self, input_image):
-
+        
         winSize = (320, 480)
         input_image = cv2.resize(input_image,winSize)
         blockSize = (80, 80)  # 105

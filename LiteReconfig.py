@@ -106,6 +106,7 @@ with open(filename_det, "w") as fout_det, open(filename_lat, "w") as fout_lat:
 
         #feature_cache暂时不理解 
         # TODO
+        # nobj应该是物体的数量，objsize应该是物体的大小
         feature_cache = {"nobj": 0, "objsize": 0, "RPN": np.zeros((1024,)), "CPoP": np.zeros((31,))}
 
 
@@ -148,6 +149,7 @@ with open(filename_det, "w") as fout_det, open(filename_lat, "w") as fout_lat:
 
 
             #执行器执行，需要config，GOF，视频路径，帧编号，图片，特征缓存，运行日志
+            # TODO
             executor.run(config, frame_cnt_GoF, video_dir, frame_idx, img_pil, feature_cache, run_log)
 
 

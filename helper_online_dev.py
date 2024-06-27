@@ -300,16 +300,27 @@ class SchedulerCBOnline:
     def schedule(self, video_dir, video_idx, frame_idx, feature_cache, contention_levels):
 
         # Load a video frame
+        # 上面的英文注释讲的很清楚，就是加载一个视频帧
         time1 = time.time()
         video_frame_path = os.path.join(video_dir, "{:06d}.JPEG".format(frame_idx))
         full_path = os.path.join(self.dataset_prefix, video_frame_path)
         image_pil = Image.open(full_path)
         time2 = time.time()
 
+
+
+
+
         # Extract light feature
+        # 这里的feature就是所谓的light feature
         width, height = image_pil.size
         nobj, objsize = feature_cache["nobj"], feature_cache["objsize"]
         feature = [height, width, nobj, objsize]
+
+
+
+
+
 
         # Two-head solution needs the Latency predictor
         per_branch_latency = self.latency_predictor.predict(\
@@ -321,9 +332,14 @@ class SchedulerCBOnline:
         per_branch_accuracy_cag = self.accuracy_predictor["SmartAdapt_BL"].predict()
         time2a = time.time()
 
+
+
+
+
         # Feature selection
         results = []
         for idx, protocol in enumerate(self.protocol_options):
+            # 根据protocol,移动设备，gpu级别，确定cost_LUT，一共有1036个值。
             per_branch_cost = self.cost_LUT[(protocol, self.mobile_device, contention_levels["gpu_level"])]
             benfit = self.benefit_LUT[(protocol, self.mobile_device, contention_levels["gpu_level"], self.user_requirement)]
             acc_lat_config_tups = [(acc+benfit, lat+cost, config) for acc, lat, cost, config in \
@@ -336,6 +352,12 @@ class SchedulerCBOnline:
             else:
                 acc_est, lat_est, config = max(acc_lat_config_tups, key=lambda x: (x[0], -x[1]))
             results.append((protocol, acc_est, lat_est, config))
+        
+        
+        
+        
+        
+        
         # For debug purpose
         # print("Feature selection results: {}".format(results))
         self.protocol, acc_est, lat_est, config = max(results, key=lambda x: (x[1], -x[2]))
