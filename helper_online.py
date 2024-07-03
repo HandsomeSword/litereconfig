@@ -775,9 +775,12 @@ class SchedulerOnline:
         return config, image_pil, run_log
 
 def load_graph_from_file(filename):
-
+    # 创建一个计算图
     detection_graph = tf.Graph()
+    # 将detection_graph设置为默认图
     with detection_graph.as_default():
+        # 在tensorflow中，graphdef就是用来处理序列化的计算图的，下面的代码就是从文件中读取序列化的计算图
+        # 然后将其导入到当前的计算图中，导入的方式就是使用这个tf的上下文管理器。
         od_graph_def = tf.compat.v1.GraphDef()
         with tf.io.gfile.GFile(filename, 'rb') as fid:
             serialized_graph = fid.read()
@@ -1026,9 +1029,11 @@ class MBODF:
     
     # A Multi-branch Object Detection Framework
     def __init__(self, feat, kernel, frcnn_weight, fout_det, fout_lat, tv_version=None, dataset_prefix=None):
-        
+        # fout_det和fout_lat分别是两个输出文件的路径
         self.fout_det = fout_det
         self.fout_lat = fout_lat
+
+
         if not dataset_prefix:
             socket_name = socket.gethostname()
             self.dataset_prefix = {
@@ -1044,6 +1049,7 @@ class MBODF:
             print("Error, kernel not found")
         self.last_config = (-1, -1, -1, "", -1)
 
+        # 查看一下加载FRCNN模型的代码，frcnn_weight是文件路径
         self.detection_graph = load_graph_from_file(frcnn_weight)
         tf_config = tf.compat.v1.ConfigProto()
         tf_config.gpu_options.allow_growth = True
