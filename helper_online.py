@@ -1051,6 +1051,7 @@ class MBODF:
 
         # 查看一下加载FRCNN模型的代码，frcnn_weight是文件路径
         self.detection_graph = load_graph_from_file(frcnn_weight)
+        # 创建一个config对象，用于设置运行时的参数。
         tf_config = tf.compat.v1.ConfigProto()
         tf_config.gpu_options.allow_growth = True
         with self.detection_graph.as_default():
