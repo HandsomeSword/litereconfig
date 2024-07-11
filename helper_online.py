@@ -918,7 +918,7 @@ class OpenCVTracker:
 class FlowRawTracker:
 
     def __init__(self, ds = 1, anchor = "fixed", mode = "bbox_median"):
-
+        
         self.ds = ds
         self.prev_frame = None
         self.prev_bboxes = [] # (cls, conf, ymin, xmin, ymax, xmax) in [0,1]
@@ -926,14 +926,15 @@ class FlowRawTracker:
         self.mode = mode
 
     def set_prev_frame(self, frame = None, bboxes = []):
-
+        # 为了设置prev_frame和bboxed
         if not frame is None:
             prvs_img = self.resize(frame)
+            # 将彩色图像转换成灰度图像
             self.prev_frame = cv2.cvtColor(prvs_img, cv2.COLOR_BGR2GRAY)
         self.prev_bboxes = bboxes
 
     def resize(self, input_img):
-
+        # 那么降采样实际就是resize
         if self.ds == 4:
             return input_img[::4, ::4, :]
         elif self.ds == 2:
@@ -1064,6 +1065,8 @@ class MBODF:
             keys = ['num_detections', 'detection_boxes', 'detection_scores', 'detection_classes']
             if feat in ["RPN", "CPoP"]:
                 keys.append(self.tname[feat])
+            # output_tensor_dict是一个字典，这个字典保存的就是输出张量的值，输出的结果比较复杂，包含多种信息，所以需要使用这种结构化的方式保存。
+            # 那么这里output_tensor保存了这些信息：识别目标的个数；目标框的信息（位置，大小），识别的分数，识别的类别。
             self.output_tensor_dict = {key:graph.get_tensor_by_name(key + ':0') for key in keys}
             self.sess = tf.compat.v1.Session(config=tf_config)
         self.preheat()
@@ -1100,6 +1103,8 @@ class MBODF:
                 self.tracker = OpenCVTracker(ds=ds, name=tracker_name)
         for frame_idx_delta in range(frame_cnt_GoF):
             # 1. Load a frame from the storage
+
+            # time2 - time1就是加载一帧图像的时间
             time1 = time.time()
             filename = "{:06d}.JPEG".format(frame_idx+frame_idx_delta)
             video_frame_path = os.path.join(video_dir, filename)
@@ -1109,22 +1114,30 @@ class MBODF:
                 full_path = os.path.join(self.dataset_prefix, video_frame_path)
                 image_raw = np.array(Image.open(full_path))
             time2 = time.time()
+            
 
+            # 如果是第一帧，就进行检测
             if frame_idx_delta == 0:  # Do "detection"
                 with self.detection_graph.as_default():
                     image_np = image_raw.astype(np.uint8)
                     image_4D = np.expand_dims(image_np, axis=0)
                     feed_dict = {self.tensor_frame: image_4D, self.tensor_nprop: nprop, self.tensor_shape: shape}
+                    # 检测其实就是运行这个模型，得到的输出结果，暂时不知道是什么意思，需要跑一下这个模型，然后看一下输出的是啥。
+                    # 输出结果
+                    # 输出结果并没有通过运行模型得到，通过output_tensor_dict的定义大概知道了输出结果的含义
+                    # 输出结果包含的信息为：识别目标个数，目标框信息（位置，大小），识别分数，识别类别以及提取的特征（可能使用的是不同的方式）
                     output_dict = self.sess.run(self.output_tensor_dict, feed_dict=feed_dict)
                     bboxes = output_dict_to_bboxes_single_img(output_dict)
                 time3 = time.time()
 
                 if si > 1:
                     # tracker requires 3D numpy array in BGR
+                    # 跟踪器需要保存第一帧图像的数据以及计算的结果。
                     image_np = image_raw[:, :, ::-1]
                     self.tracker.set_prev_frame(frame=image_np, bboxes=bboxes)
                 time4 = time.time()
             else:  # Do "tracking"
+                # 不是第一帧，就进行跟踪
                 time3 = time.time()
 
                 # Format change for the tracker: an BGR numpy array
