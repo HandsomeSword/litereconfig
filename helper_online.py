@@ -952,6 +952,7 @@ class FlowRawTracker:
         next_img = cv2.cvtColor(next_img, cv2.COLOR_BGR2GRAY)
         height, width = next_img.shape
         
+        # 计算两帧之间的稠密光流。输入是两帧灰度图像，输出是一个和输入大小相同的二维矢量场，每个像素的值代表两帧之间的运动矢量。
         img_flow = cv2.calcOpticalFlowFarneback(prev = self.prev_frame, next = next_img,
                                        flow = None, pyr_scale = 0.5,
                                        levels = 3, winsize = 15, iterations = 3,
@@ -962,7 +963,7 @@ class FlowRawTracker:
         new_bboxes = []
         for cls, conf, ymin, xmin, ymax, xmax in self.prev_bboxes:
             sig_pts0, sig_pts = [], []
-
+            
             # First, find out the "significant" flows
             for x in range(int(xmin*width), int(xmax*width), 4):
                 for y in range(int(ymin*height), int(ymax*height), 4):
